@@ -529,6 +529,14 @@ static func top_down_2d() -> DotPhysicsLayout:
 		DotPhysicsLayer.make(
 			&"projectile", [&"world", &"enemy", &"prop"], "Shots."
 		),
+		# [b]A hazard, which this preset did not have and its side-on sibling did.[/b]
+		# `platformer_2d` has carried one since it was written — spikes, lava, a crusher
+		# — and a top-down arena has exactly the same thing: a volume that hurts a player
+		# and that nothing else should collide with. Its absence was not a decision, and
+		# it showed as a game classifying a hazard body onto a layer that does not exist
+		# and being refused, which leaves the body where it was: on layer 1, which this
+		# layout calls `world`. A hazard that is a piece of floor.
+		DotPhysicsLayer.make(&"hazard", [&"player"], "Spikes, lava, a crusher.", true),
 		DotPhysicsLayer.make(&"pickup", [], "Found by a query.", true),
 		DotPhysicsLayer.make(&"trigger", [], "Fires when entered.", true),
 	]

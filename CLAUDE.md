@@ -58,3 +58,31 @@ The surface fields are the ones shipped engine surface tables converge on: frict
 It does not simulate. It does not own bodies. It does not replace dot-player-controller's `DotFpsSurface`, which is a set of multipliers on player movement rather than a description of a rigid body — a game wants both and they are read by different code at different times.
 
 It also does not decide collision layers for you at runtime. `classify()` is a call a game makes; nothing here walks a scene tree looking for things to reclassify, because a system that silently changes what a body collides with is a system nobody can debug.
+
+## Naming a layer is half a layout; the other half is `classify`
+
+`DotPhysicsWorld.setup` writes the layer names into ProjectSettings so a designer can read
+them in the inspector. That is the half that is easy to reach and the half that changes
+nothing: every body in all five games in this family stayed on Godot's default layer 1
+masking layer 1 while the inspector showed a layout nothing followed.
+
+Two of the consequences were live bugs rather than cosmetics. Two physics props dropped in
+the same place **passed through each other** in both sandboxes, because layer 1 masks layer
+1 and nothing else. And `DotFpsTunables.collision_mask` defaults to `1`, which no game had
+ever set — so the moment anything moved off bit 0, a player would have walked through it
+with nothing erroring, because a sweep that hits nothing is a sweep rather than an error.
+
+**A failed `classify` must not be discarded.** It returns a `DotResult` and fails for a
+layer the layout does not have; the body then keeps layer 1, which every preset here calls
+`world`. A hazard that is a piece of floor is what that looks like, and
+`var _put := classify(...)` is how it goes unnoticed.
+
+**`top_down_2d` gained a `hazard` layer**, which `platformer_2d` has had since it was
+written. Its absence was not a decision: a top-down arena has spikes and lava like any
+other.
+
+**A layout is not a local preference.** It is the numbers written into `collision_layer` on
+nodes that both a server and its clients build, so a consumer that only builds the layout
+where it also applies the *profile* ends up with two worlds whose collision matrices
+differ — agreeing only for as long as nothing reads the layout. The profile is the server's
+to decide; the layout is everybody's.
