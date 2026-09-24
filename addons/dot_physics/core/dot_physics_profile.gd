@@ -207,7 +207,10 @@ func gravity_vector_2d() -> Vector2:
 ## the physics exists to be shot at rather than to be simulated accurately. 128 Hz
 ## because hit registration at speed is the whole game.
 static func arcade_shooter() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	# Not this class's own name. A script that names itself in an expression, loaded after
+	# its base, cuts Godot 4.7.2's exit teardown short and leaks every script loaded before
+	# it. See docs/gdscript-hazards.md, "A script that names itself".
+	var p := new()
 	p.tick_rate = 128
 	p.gravity_3d = 20.0
 	p.linear_damp_3d = 0.05
@@ -228,7 +231,7 @@ static func arcade_shooter() -> DotPhysicsProfile:
 ## crates hold, ragdolls settle rather than twitch. 64 Hz, because the simulation is
 ## doing more per tick and nothing in it is decided by a shot fired mid-strafe.
 static func grounded() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	var p := new()
 	p.tick_rate = 64
 	p.gravity_3d = 12.0
 	p.linear_damp_3d = 0.15
@@ -248,7 +251,7 @@ static func grounded() -> DotPhysicsProfile:
 ## so a map full of settled props is free, and characters that push bodies because
 ## shoving things about is the point.
 static func sandbox() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	var p := new()
 	p.tick_rate = 64
 	p.gravity_3d = 16.0
 	p.linear_damp_3d = 0.12
@@ -268,7 +271,7 @@ static func sandbox() -> DotPhysicsProfile:
 ## The side-on platformer, where gravity is a design parameter rather than a physical
 ## constant and the arc of a jump is the whole feel of the game.
 static func floaty_platformer() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	var p := new()
 	p.tick_rate = 60
 	p.gravity_2d = 1400.0
 	p.gravity_3d = 9.0
@@ -285,7 +288,7 @@ static func floaty_platformer() -> DotPhysicsProfile:
 ## The top-down arena. Everything that moves is driven rather than falling, so the only
 ## numbers that matter are the solver's and the sleep threshold's.
 static func top_down() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	var p := new()
 	p.tick_rate = 60
 	p.gravity_2d_enabled = false
 	p.gravity_2d = 0.0
@@ -318,7 +321,7 @@ static func top_down() -> DotPhysicsProfile:
 ## [member characters_push_bodies] — have no ProjectSettings counterpart and keep this
 ## class's defaults. Nothing in the engine reads them; a controller does.
 static func from_project() -> DotPhysicsProfile:
-	var p := DotPhysicsProfile.new()
+	var p := new()
 
 	p.tick_rate = int(_setting("physics/common/physics_ticks_per_second", p.tick_rate))
 	p.max_steps_per_frame = int(
@@ -379,11 +382,11 @@ static func _setting(name: String, fallback: Variant) -> Variant:
 
 static func presets() -> Dictionary:
 	return {
-		&"arcade_shooter": Callable(DotPhysicsProfile, "arcade_shooter"),
-		&"grounded": Callable(DotPhysicsProfile, "grounded"),
-		&"sandbox": Callable(DotPhysicsProfile, "sandbox"),
-		&"floaty_platformer": Callable(DotPhysicsProfile, "floaty_platformer"),
-		&"top_down": Callable(DotPhysicsProfile, "top_down"),
+		&"arcade_shooter": arcade_shooter,
+		&"grounded": grounded,
+		&"sandbox": sandbox,
+		&"floaty_platformer": floaty_platformer,
+		&"top_down": top_down,
 	}
 
 
@@ -394,4 +397,6 @@ static func preset(p_id: StringName) -> DotPhysicsProfile:
 		return null
 
 	var fn: Callable = table[p_id]
-	return fn.call() as DotPhysicsProfile
+	# Returned through the declared type rather than cast to this class by name; see the
+	# note on the presets above.
+	return fn.call()
