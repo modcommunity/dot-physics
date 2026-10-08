@@ -144,7 +144,7 @@ func env_prefix() -> String:
 
 
 func cli_prefix() -> String:
-	return "physics-"
+	return "--physics-"
 
 
 func validate() -> DotResult:
