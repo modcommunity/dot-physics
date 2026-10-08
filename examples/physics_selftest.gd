@@ -13,7 +13,7 @@ extends Node
 ## [/codeblock]
 
 const SECTIONS := 8
-const CHECKS := 128
+const CHECKS := 131
 
 var _passed := 0
 var _failed := 0
@@ -350,7 +350,13 @@ func _test_surfaces() -> void:
 
 	var set := DotPhysicsSurfaceSet.standard()
 	_check(set.build().ok, "the standard table builds")
-	_check(set.ids().size() == 15, "with fifteen surfaces")
+	_check(set.ids().size() == 18, "with eighteen surfaces")
+	_check(set.get_surface(&"thin_ice").break_health > 0.0 and set.get_surface(&"thin_ice").break_health < set.get_surface(&"glass").break_health,
+		"thin ice breaks, sooner than glass")
+	_check(set.get_surface(&"slime").liquid and set.get_surface(&"slime").hazard_damage > 0.0
+		and set.get_surface(&"slime").hazard_damage < set.get_surface(&"lava").hazard_damage, "slime is a liquid that hurts, less than lava")
+	_check(not set.get_surface(&"foliage").solid and not set.get_surface(&"foliage").liquid and set.get_surface(&"concrete").solid,
+		"foliage is walked through, and concrete is not")
 	_check(set.get_surface(&"water").liquid and set.get_surface(&"lava").liquid and not set.get_surface(&"ice").liquid,
 		"water and lava are liquids, and ice is not")
 	_check(set.get_surface(&"glass").break_health > 0.0 and set.get_surface(&"concrete").break_health == 0.0,

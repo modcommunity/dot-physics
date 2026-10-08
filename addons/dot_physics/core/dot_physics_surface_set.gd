@@ -157,7 +157,7 @@ func _to_string() -> String:
 
 # --- Presets ----------------------------------------------------------------
 
-## The fifteen surfaces a level is actually built out of: what buildings are made of, what
+## The eighteen surfaces a level is actually built out of: what buildings are made of, what
 ## the ground outdoors is, and the two liquids.
 ##
 ## Numbers are ordinary physical ones where the material is real — steel is 7800 kg/m³
@@ -264,9 +264,32 @@ static func standard() -> DotPhysicsSurfaceSet:
 	lava.hazard_damage = 60.0
 	lava.impact_effect = &"impact_lava"
 
+	# Ice thin enough to break: a hard landing or a few shots and it goes, and whatever is
+	# under it (a frozen pond) is what the player meets next.
+	var thin_ice := DotPhysicsSurface.make(&"thin_ice", 0.05, 0.05, 917.0)
+	thin_ice.traction = 0.1
+	thin_ice.move_scale = 0.7
+	thin_ice.thickness = 0.05
+	thin_ice.break_health = 8.0
+	thin_ice.footstep_sound = &"step_ice"
+	thin_ice.impact_sound = &"impact_glass"
+
+	# Toxic: a liquid a person can swim in (barely denser than water) that hurts while they do.
+	var slime := DotPhysicsSurface.make(&"slime", 0.3, 0.0, 1100.0)
+	slime.liquid = true
+	slime.dampening = 4.0
+	slime.move_scale = 0.5
+	slime.hazard_damage = 15.0
+	slime.impact_effect = &"impact_water"
+
+	# Leaves: drawn, walked through, hidden in. Not solid and not a liquid.
+	var foliage := DotPhysicsSurface.make(&"foliage", 0.0, 0.0, 200.0)
+	foliage.solid = false
+	foliage.footstep_sound = &"step_grass"
+
 	set.surfaces = [
 		concrete, metal, wood, glass, dirt, grass, sand, snow, ice, flesh, water,
-		rock, mud, rubber, lava,
+		rock, mud, rubber, lava, thin_ice, slime, foliage,
 	]
 	set.fallback_id = &"concrete"
 

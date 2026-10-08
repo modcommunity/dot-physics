@@ -78,6 +78,11 @@ extends Resource
 ## body in it (it floats when its own density is lower) and [member dampening] for the drag.
 @export var liquid: bool = false
 
+## Whether anything collides with it at all. False for foliage: a hedge a player walks into
+## and hides in, which is drawn and never in the way. A liquid is not solid either; this is
+## the solid-and-not-liquid case.
+@export var solid: bool = true
+
 ## Damage a sheet of this takes before it breaks, or 0 for never: glass, thin ice. The
 ## game owns health and what breaking looks like; this is the number, kept with the rest
 ## of what the material is so a pane and a floor of the same glass agree.
