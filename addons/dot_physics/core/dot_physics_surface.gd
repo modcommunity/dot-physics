@@ -66,6 +66,28 @@ extends Resource
 ## Whether a character takes falling damage landing on this.
 @export var breaks_fall: bool = false
 
+## Multiplier on a character's jump off this. Rubber is above 1: a trampoline is what a
+## level asks for, and a jump that goes higher off it is the part of one a character
+## controller can promise without simulating the bounce.
+@export_range(0.0, 4.0, 0.01) var jump_scale: float = 1.0
+
+@export_group("Behaviour")
+
+## A volume something is IN rather than a floor it stands on: water, lava. A game builds a
+## liquid with no collider a character stands on, and asks [member density] to float a
+## body in it (it floats when its own density is lower) and [member dampening] for the drag.
+@export var liquid: bool = false
+
+## Damage a sheet of this takes before it breaks, or 0 for never: glass, thin ice. The
+## game owns health and what breaking looks like; this is the number, kept with the rest
+## of what the material is so a pane and a floor of the same glass agree.
+@export_range(0.0, 10000.0, 0.5) var break_health: float = 0.0
+
+## Damage per second to anything touching or inside it, or 0: lava. Which damage system
+## that goes through, and whether it applies at all on a server with damage off, is the
+## game's.
+@export_range(0.0, 1000.0, 0.5) var hazard_damage: float = 0.0
+
 @export_group("Presentation")
 
 ## dot-audio id played on impact. Empty for silence.
@@ -120,8 +142,15 @@ func mass_for_volume(volume: float, surface_area: float = 0.0) -> float:
 
 
 func describe() -> String:
-	return "%s friction=%.2f bounce=%.2f density=%.0f" % [
-		String(id), friction, restitution, density
+	var extra := ""
+	if liquid:
+		extra += " liquid"
+	if break_health > 0.0:
+		extra += " breaks=%.0f" % break_health
+	if hazard_damage > 0.0:
+		extra += " hazard=%.0f/s" % hazard_damage
+	return "%s friction=%.2f bounce=%.2f density=%.0f%s" % [
+		String(id), friction, restitution, density, extra
 	]
 
 

@@ -86,3 +86,7 @@ nodes that both a server and its clients build, so a consumer that only builds t
 where it also applies the *profile* ends up with two worlds whose collision matrices
 differ — agreeing only for as long as nothing reads the layout. The profile is the server's
 to decide; the layout is everybody's.
+
+## Liquids, breakables and hazards are surface fields (2026-10-07)
+
+`DotPhysicsSurface` gained `liquid` (a volume something is in, not a floor), `break_health` (damage a sheet takes before it breaks, 0 never), `hazard_damage` (per second, touching or inside) and `jump_scale`, and the standard table gained `rock`, `mud`, `rubber` and `lava` (fifteen now): water and lava are liquids, glass breaks at 25, lava burns at 60 a second, rubber jumps 1.8x with restitution held at 0.8 under the energy-gaining threshold. **The addon still simulates none of it**: these are the numbers, kept with the rest of what a material is, and a game decides what a liquid does to a body, what breaking looks like and whose damage system a hazard goes through. game-playground's map materials were the first user. The selftest asserts each (128).

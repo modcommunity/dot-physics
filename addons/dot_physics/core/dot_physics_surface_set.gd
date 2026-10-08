@@ -157,7 +157,8 @@ func _to_string() -> String:
 
 # --- Presets ----------------------------------------------------------------
 
-## The eleven surfaces a level is actually built out of.
+## The fifteen surfaces a level is actually built out of: what buildings are made of, what
+## the ground outdoors is, and the two liquids.
 ##
 ## Numbers are ordinary physical ones where the material is real — steel is 7800 kg/m³
 ## because it is — and chosen by feel where it is not. Ice at 0.05 friction is not what
@@ -183,6 +184,9 @@ static func standard() -> DotPhysicsSurfaceSet:
 
 	var glass := DotPhysicsSurface.make(&"glass", 0.4, 0.15, 2500.0)
 	glass.thickness = 0.006
+	# A pane takes a pistol magazine or one good hit from a thrown crate. Low on purpose:
+	# glass in a level is there to be broken.
+	glass.break_health = 25.0
 	glass.footstep_sound = &"step_glass"
 	glass.impact_effect = &"impact_glass"
 	glass.impact_sound = &"impact_glass"
@@ -226,9 +230,43 @@ static func standard() -> DotPhysicsSurfaceSet:
 	water.breaks_fall = true
 	water.footstep_sound = &"step_water"
 	water.impact_effect = &"impact_water"
+	water.liquid = true
+
+	var rock := DotPhysicsSurface.make(&"rock", 0.8, 0.05, 2600.0)
+	rock.footstep_sound = &"step_rock"
+	rock.impact_effect = &"impact_concrete"
+	rock.impact_sound = &"impact_concrete"
+
+	# Deeper and stickier than dirt: slow to cross, and a jump out of it is a short one.
+	var mud := DotPhysicsSurface.make(&"mud", 0.95, 0.0, 1700.0)
+	mud.dampening = 2.5
+	mud.move_scale = 0.6
+	mud.traction = 1.2
+	mud.jump_scale = 0.8
+	mud.breaks_fall = true
+	mud.footstep_sound = &"step_mud"
+	mud.impact_effect = &"impact_dirt"
+
+	# A trampoline. Restitution at 0.8 rather than at 1: past about 0.9 solver error adds
+	# energy and a body bounces higher than it was dropped from (see [member restitution]).
+	var rubber := DotPhysicsSurface.make(&"rubber", 1.0, 0.8, 1100.0)
+	rubber.jump_scale = 1.8
+	rubber.breaks_fall = true
+	rubber.footstep_sound = &"step_rubber"
+	rubber.impact_sound = &"impact_rubber"
+
+	# Molten rock: a liquid that burns. Dense enough that wood floats on it and a person
+	# wades rather than swims.
+	var lava := DotPhysicsSurface.make(&"lava", 0.9, 0.0, 3100.0)
+	lava.liquid = true
+	lava.dampening = 6.0
+	lava.move_scale = 0.3
+	lava.hazard_damage = 60.0
+	lava.impact_effect = &"impact_lava"
 
 	set.surfaces = [
-		concrete, metal, wood, glass, dirt, grass, sand, snow, ice, flesh, water
+		concrete, metal, wood, glass, dirt, grass, sand, snow, ice, flesh, water,
+		rock, mud, rubber, lava,
 	]
 	set.fallback_id = &"concrete"
 
