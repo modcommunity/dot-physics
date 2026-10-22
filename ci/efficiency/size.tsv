@@ -1,0 +1,7 @@
+# size
+# Baselines only shrink: scripts/<gate> --update lowers or drops entries and refuses to add.
+addons/dot_physics/core/dot_physics_layout.gd::shooter_3d	113
+addons/dot_physics/core/dot_physics_surface_set.gd::standard	132
+examples/physics_selftest.gd::_test_queries	81
+examples/physics_selftest.gd::_test_surfaces	93
+examples/physics_selftest.gd::_test_world	84
