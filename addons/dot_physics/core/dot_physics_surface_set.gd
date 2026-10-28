@@ -126,6 +126,63 @@ static func tag(node: Node, surface_id: StringName) -> void:
 		node.set_meta(META_KEY, String(surface_id))
 
 
+## Density at or under which a liquid is one a person swims in; above it they wade or burn.
+const SWIM_DENSITY := 1200.0
+
+## Node metadata key [method apply] writes beside [constant META_KEY], and [method material_of] reads.
+const META_MATERIAL := "dot_material"
+
+
+## The surface with exactly this id, or null (unlike [method get_surface], no fallback).
+func find(surface_id: StringName) -> DotPhysicsSurface:
+	_ensure_built()
+	return _by_id.get(surface_id, null)
+
+
+## Whether the id is a liquid in the table. False for an unknown id.
+func is_liquid(surface_id: StringName) -> bool:
+	var s := find(surface_id)
+	return s != null and s.liquid
+
+
+## Built with no collider a character stands on: a liquid, or something not solid.
+func is_volume(surface_id: StringName) -> bool:
+	var s := find(surface_id)
+	return s != null and (s.liquid or not s.solid)
+
+
+## A liquid a person swims in rather than burns in or sinks to the bottom of (water, slime).
+func is_swimmable(surface_id: StringName) -> bool:
+	var s := find(surface_id)
+	return s != null and s.liquid and s.density <= SWIM_DENSITY
+
+
+## Marks a body as made of [param surface_id]: solver material and metadata.
+## [param extra_meta_keys] get the same id, for a consumer's own key. Refuses an unknown
+## id or null body, leaving the body alone.
+func apply(body: CollisionObject3D, surface_id: StringName, extra_meta_keys: Array[StringName] = []) -> DotResult:
+	var s := find(surface_id)
+	if body == null or s == null:
+		return DotResult.fail(
+			DotError.CODE_INVALID, "Cannot apply surface '%s'." % String(surface_id)
+		)
+
+	tag(body, surface_id)
+	body.set_meta(META_MATERIAL, surface_id)
+	for key in extra_meta_keys:
+		body.set_meta(key, surface_id)
+	if body is PhysicsBody3D and "physics_material_override" in body:
+		body.set("physics_material_override", s.to_physics_material())
+	return DotResult.success(null)
+
+
+## The id [method apply] recorded on a node, or empty.
+static func material_of(node: Object) -> StringName:
+	if node is Node and (node as Node).has_meta(META_MATERIAL):
+		return StringName(str((node as Node).get_meta(META_MATERIAL)))
+	return &""
+
+
 func ids() -> Array[StringName]:
 	_ensure_built()
 	var out: Array[StringName] = []

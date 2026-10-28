@@ -12,8 +12,8 @@ extends Node
 ## godot --headless --path . res://examples/physics_selftest.tscn
 ## [/codeblock]
 
-const SECTIONS := 8
-const CHECKS := 131
+const SECTIONS := 9
+const CHECKS := 148
 
 var _passed := 0
 var _failed := 0
@@ -35,6 +35,7 @@ func _run() -> void:
 	_test_masks()
 	_test_profiles()
 	_test_surfaces()
+	_test_surface_apply()
 	_test_world()
 	# Awaited: this section needs physics frames to pass before a cast can hit
 	# anything, and an un-awaited coroutine would let the tally below print first.
@@ -435,6 +436,42 @@ func _test_surfaces() -> void:
 	grouped.queue_free()
 	named.queue_free()
 	anonymous.queue_free()
+
+
+func _test_surface_apply() -> void:
+	_section("surface predicates and apply")
+
+	var set := DotPhysicsSurfaceSet.standard()
+	_check(set.find(&"nonsense") == null and set.find(&"ice") != null, "find has no fallback")
+	_check(set.is_liquid(&"water") and set.is_liquid(&"lava") and not set.is_liquid(&"ice"), "liquids")
+	_check(not set.is_liquid(&"nonsense"), "an unknown id is not a liquid")
+	_check(set.is_volume(&"water") and set.is_volume(&"foliage"), "water and foliage are volumes")
+	_check(not set.is_volume(&"concrete") and not set.is_volume(&"nonsense"), "concrete is not a volume")
+	_check(set.is_swimmable(&"water") and set.is_swimmable(&"slime"), "water and slime are swum in")
+	_check(not set.is_swimmable(&"lava") and not set.is_swimmable(&"ice"), "lava and ice are not")
+
+	var body := StaticBody3D.new()
+	var keys: Array[StringName] = [&"my_key"]
+	var res := set.apply(body, &"ice", keys)
+	_check(res.ok, "apply succeeds")
+	_check(body.get_meta("my_key") == &"ice" and body.get_meta(DotPhysicsSurfaceSet.META_KEY) == "ice",
+		"it writes the extra key and the standard one")
+	_check(DotPhysicsSurfaceSet.material_of(body) == &"ice", "material_of reads it back")
+	_check(body.physics_material_override != null and body.physics_material_override.friction < 0.2,
+		"the solver material is set")
+	_check(set.for_collider(body).id == &"ice", "for_collider finds the applied surface")
+
+	var other := StaticBody3D.new()
+	var bad := set.apply(other, &"nonsense")
+	_check(not bad.ok and bad.error.code == DotError.CODE_INVALID, "unknown id is refused")
+	_check(other.get_meta_list().is_empty() and other.physics_material_override == null, "and the body is untouched")
+	_check(not set.apply(null, &"ice").ok, "null body is refused")
+	_check(DotPhysicsSurfaceSet.material_of(other) == &"" and DotPhysicsSurfaceSet.material_of(null) == &"",
+		"material_of is empty for none")
+	_check(set.apply(other, &"rubber").ok and other.physics_material_override.bounce > 0.5, "a second body takes rubber")
+
+	body.free()
+	other.free()
 
 
 # --- The world --------------------------------------------------------------
