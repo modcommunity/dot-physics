@@ -489,7 +489,7 @@ static func platformer_2d() -> DotPhysicsLayout:
 			&"hazard", [&"player"], "Spikes, lava, a crusher.", true
 		),
 		DotPhysicsLayer.make(
-			&"pickup", [], "Coins and power-ups, found by a query.", true
+			&"pickup", [], "Points pickups and power-ups, found by a query.", true
 		),
 		DotPhysicsLayer.make(
 			&"ladder", [], "Climbable volumes.", true
