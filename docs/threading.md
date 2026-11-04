@@ -19,11 +19,11 @@ Everything else in dot-combat (`DotHitbox`, `DotHitboxSet`, lag-compensation rew
 | File and function | Query | Who calls it |
 | --- | --- | --- |
 | `dot-vehicle/addons/dot_vehicle/runtime/dot_vehicle_hover.gd` `_drive` | one `intersect_ray` per mount | `DotVehicleSpawner.tick` through `DotVehicleChassis.drive`: caller-driven, in the step |
-| `dot-vehicle/addons/dot_vehicle/runtime/dot_vehicle_ride.gd` `find_exit_position` | `intersect_shape` per exit candidate | `exit`, reached from `DotVehicleSpawner.set_command` (an exit request), `destroy` and `remove` (`_evacuate`). Request handlers run between ticks: the game must deliver them from its tick, or the threaded setting reads every exit as free |
-| `mg-prop-hunt/game/ph_game.gd` `_clear_between`, `_look`, `_make_room` | ray and shape | `_step` (decoy checks, bots) and the request handlers `request_disguise` and `reveal`, called from the net bridge between ticks: the same hazard as exit requests |
+| `dot-vehicle/addons/dot_vehicle/runtime/dot_vehicle_ride.gd` `find_exit_position` | `intersect_shape` per exit candidate | `exit`, reached from `DotVehicleSpawner.set_command` (an exit request), `destroy` and `remove` (`_evacuate`). `set_command` queues the exit and `destroy`/`remove` of an occupied vehicle queue too; `DotVehicleSpawner.tick` performs them first thing, so the sweep runs in the step. Fixed 2026-11-04 |
+| `mg-prop-hunt/game/ph_game.gd` `_clear_between`, `_look`, `_make_room` | ray and shape | `_step` only: decoy checks, bots, and the queued requests. The net bridge and the offline client call `queue_disguise`/`queue_reveal`, which `_step` drains first thing (`request_disguise` and `reveal` are the in-tick implementations). Fixed 2026-11-04 |
 | `mg-prop-hunt/game/ph_client.gd` `_process` | one ray for the ambient roof probe | Client only, every frame. Not fixed: the threaded option is a server setting and a client never sets it |
 
-Both suites grep their own code for this (`vehicle_selftest` and `headless_config` section "space-query audit"). The two request-handler paths are open on `server-physics-thread-1`: queue the request and act on it in the next tick before the option can ship.
+Both suites grep their own code for this (`vehicle_selftest` and `headless_config` section "space-query audit"). Both request-handler paths queue the request and run it in the next tick; the replies are the `refused` signals as before.
 
 ## The check
 
