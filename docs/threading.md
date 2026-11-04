@@ -14,10 +14,21 @@ Everything else in dot-combat (`DotHitbox`, `DotHitboxSet`, lag-compensation rew
 
 `DotTracePhysics._world_ray` already warns when no space state exists instead of reporting a miss. With the threaded setting, an out-of-step access is an engine error and an empty result, so a wall would read as open: the warning is the signal.
 
+## Callers in dot-vehicle and mg-prop-hunt
+
+| File and function | Query | Who calls it |
+| --- | --- | --- |
+| `dot-vehicle/addons/dot_vehicle/runtime/dot_vehicle_hover.gd` `_drive` | one `intersect_ray` per mount | `DotVehicleSpawner.tick` through `DotVehicleChassis.drive`: caller-driven, in the step |
+| `dot-vehicle/addons/dot_vehicle/runtime/dot_vehicle_ride.gd` `find_exit_position` | `intersect_shape` per exit candidate | `exit`, reached from `DotVehicleSpawner.set_command` (an exit request), `destroy` and `remove` (`_evacuate`). Request handlers run between ticks: the game must deliver them from its tick, or the threaded setting reads every exit as free |
+| `mg-prop-hunt/game/ph_game.gd` `_clear_between`, `_look`, `_make_room` | ray and shape | `_step` (decoy checks, bots) and the request handlers `request_disguise` and `reveal`, called from the net bridge between ticks: the same hazard as exit requests |
+| `mg-prop-hunt/game/ph_client.gd` `_process` | one ray for the ambient roof probe | Client only, every frame. Not fixed: the threaded option is a server setting and a client never sets it |
+
+Both suites grep their own code for this (`vehicle_selftest` and `headless_config` section "space-query audit"). The two request-handler paths are open on `server-physics-thread-1`: queue the request and act on it in the next tick before the option can ship.
+
 ## The check
 
 `examples/physics_selftest.tscn` section "space-query audit" and dot-combat's `combat_selftest` section of the same name grep their own addon for space-query calls and fail when the file set differs from the table above, when a querying file gains a frame, input, deferred or awaited entry point, or (here only) when this page stops naming a file. Add a caller: add it to `QUERY_FILES` and to this table.
 
 ## Not covered here (held by other repos)
 
-`DotTpsController._apply_intent` (`move_and_slide` from `_process`), `DotFpsController._apply_intent` callers, `DotVehicleRide.find_exit_position`, and the mg-prop-hunt and mg-wipeout weapon chains stay open on `server-physics-thread-1`.
+`DotTpsController._apply_intent` (`move_and_slide` from `_process`), `DotFpsController._apply_intent` callers and the mg-wipeout weapon chains stay open on `server-physics-thread-1`.
