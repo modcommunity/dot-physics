@@ -222,7 +222,14 @@ func _to_string() -> String:
 ## ice measures at; it is what ice has to be for a player to notice it.
 static func standard() -> DotPhysicsSurfaceSet:
 	var set := DotPhysicsSurfaceSet.new()
+	set.surfaces = _standard_ground() + _standard_other()
+	set.fallback_id = &"concrete"
 
+	var _res := set.build()
+	return set
+
+
+static func _standard_ground() -> Array[DotPhysicsSurface]:
 	var concrete := DotPhysicsSurface.make(&"concrete", 0.8, 0.05, 2400.0)
 	concrete.footstep_sound = &"step_concrete"
 	concrete.impact_effect = &"impact_concrete"
@@ -275,6 +282,12 @@ static func standard() -> DotPhysicsSurfaceSet:
 	ice.move_scale = 0.7
 	ice.footstep_sound = &"step_ice"
 
+	return [
+		concrete, metal, wood, glass, dirt, grass, sand, snow, ice,
+	]
+
+
+static func _standard_other() -> Array[DotPhysicsSurface]:
 	var flesh := DotPhysicsSurface.make(&"flesh", 0.9, 0.0, 1050.0)
 	flesh.dampening = 2.0
 	flesh.breaks_fall = true
@@ -344,11 +357,6 @@ static func standard() -> DotPhysicsSurfaceSet:
 	foliage.solid = false
 	foliage.footstep_sound = &"step_grass"
 
-	set.surfaces = [
-		concrete, metal, wood, glass, dirt, grass, sand, snow, ice, flesh, water,
-		rock, mud, rubber, lava, thin_ice, slime, foliage,
+	return [
+		flesh, water, rock, mud, rubber, lava, thin_ice, slime, foliage,
 	]
-	set.fallback_id = &"concrete"
-
-	var _res := set.build()
-	return set

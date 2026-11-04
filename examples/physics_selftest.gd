@@ -397,7 +397,10 @@ func _test_surfaces() -> void:
 
 	_check(not DotPhysicsSurfaceSet.new().build().ok, "an empty table is refused")
 
-	# The lookup, which is the hard half.
+	_test_surface_lookup(set)
+
+
+func _test_surface_lookup(set: DotPhysicsSurfaceSet) -> void:
 	var tagged := StaticBody3D.new()
 	tagged.name = "SomeWall"
 	DotPhysicsSurfaceSet.tag(tagged, &"metal")
@@ -542,6 +545,12 @@ func _test_world() -> void:
 	)
 	_check(Engine.physics_ticks_per_second == before_rate, "including on Engine")
 
+	body.queue_free()
+	world.queue_free()
+	_test_world_refuses_invalid()
+
+
+func _test_world_refuses_invalid() -> void:
 	var invalid := DotPhysicsWorld.new()
 	invalid.register_service = false
 	invalid.profile = DotPhysicsProfile.new()
@@ -555,8 +564,6 @@ func _test_world() -> void:
 	)
 	_check(not invalid.is_applied(), "and the world stays unapplied")
 
-	body.queue_free()
-	world.queue_free()
 	invalid.queue_free()
 
 
@@ -570,6 +577,11 @@ func _test_queries() -> void:
 	var q := DotPhysicsQuery.new(layout, surfaces)
 
 	_check(q.layout == layout, "a query carries its layout")
+	_test_queries_without_world(q)
+	await _test_queries_in_world(layout, q)
+
+
+func _test_queries_without_world(q: DotPhysicsQuery) -> void:
 	_check(
 		q.ray_3d(null, Vector3.ZERO, Vector3.ONE, [&"world"]).is_empty(),
 		"a cast with no world answers nothing rather than crashing"
@@ -589,7 +601,8 @@ func _test_queries() -> void:
 		+ "degrade to Godot's own behaviour rather than to no physics at all"
 	)
 
-	# The real cast, against a body that is actually in a world.
+
+func _test_queries_in_world(layout: DotPhysicsLayout, q: DotPhysicsQuery) -> void:
 	var space := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()

@@ -320,7 +320,14 @@ static func shooter_3d() -> DotPhysicsLayout:
 	layout.id = &"shooter_3d"
 	layout.description = "Competitive first- and third-person shooters."
 
-	layout.layers = [
+	layout.layers = _shooter_bodies() + _shooter_volumes()
+
+	var _res := layout.build()
+	return layout
+
+
+static func _shooter_bodies() -> Array[DotPhysicsLayer]:
+	return [
 		DotPhysicsLayer.make(
 			&"world",
 			[&"player", &"npc", &"prop", &"debris", &"projectile", &"vehicle", &"ragdoll"],
@@ -364,6 +371,11 @@ static func shooter_3d() -> DotPhysicsLayout:
 			"A corpse. Solid against the level so it settles, and against nothing else "
 			+ "so it cannot block a doorway or be used as a step."
 		),
+	]
+
+
+static func _shooter_volumes() -> Array[DotPhysicsLayer]:
+	return [
 		DotPhysicsLayer.make(
 			&"player_clip",
 			[&"player"],
@@ -417,9 +429,6 @@ static func shooter_3d() -> DotPhysicsLayout:
 			true
 		),
 	]
-
-	var _res := layout.build()
-	return layout
 
 
 ## The sandbox layout: the shooter's, plus what a physics gun needs.
