@@ -61,7 +61,6 @@ func _run() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-# --- Layers -----------------------------------------------------------------
 
 func _test_layers() -> void:
 	_section("a layer")
@@ -77,7 +76,6 @@ func _test_layers() -> void:
 	_check(l.describe().contains("player"), "and it describes itself")
 
 
-# --- Presets ----------------------------------------------------------------
 
 func _test_layout_presets() -> void:
 	_section("the presets")
@@ -273,7 +271,6 @@ func _test_masks() -> void:
 	node.queue_free()
 
 
-# --- Profiles ---------------------------------------------------------------
 
 func _test_profiles() -> void:
 	_section("profiles")
@@ -345,7 +342,6 @@ func _test_profiles() -> void:
 	_check(layered.env_prefix() == "DOT_PHYSICS_", "with its own environment prefix")
 
 
-# --- Surfaces ---------------------------------------------------------------
 
 func _test_surfaces() -> void:
 	_section("surfaces")
@@ -478,7 +474,6 @@ func _test_surface_apply() -> void:
 	other.free()
 
 
-# --- The world --------------------------------------------------------------
 
 func _test_world() -> void:
 	_section("applying and putting back")
@@ -567,7 +562,6 @@ func _test_world_refuses_invalid() -> void:
 	invalid.queue_free()
 
 
-# --- Queries ----------------------------------------------------------------
 
 func _test_queries() -> void:
 	_section("queries")
@@ -655,7 +649,6 @@ func _test_queries_in_world(layout: DotPhysicsLayout, q: DotPhysicsQuery) -> voi
 	space.queue_free()
 
 
-# --- Harness ---------------------------------------------------------------
 
 func _section(title: String) -> void:
 	_section_count += 1
@@ -676,9 +669,8 @@ func _line(text: String) -> void:
 	print(text)
 
 
-# --- Space-query audit -----------------------------------------------------
 
-## Every file under the addon that asks the physics space a question, found by grep. A new
+## Every file under the addon that asks the physics space a question. A new
 ## one fails here until it is added to [constant QUERY_FILES] and to docs/threading.md, so the
 ## list of callers that must run inside a physics step cannot go stale.
 const QUERY_FILES: Array[String] = ["runtime/dot_physics_query.gd"]

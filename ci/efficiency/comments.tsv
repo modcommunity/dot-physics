@@ -12,5 +12,4 @@ addons/dot_physics/dot_physics_plugin.gd::long_block	1
 addons/dot_physics/runtime/dot_physics_query.gd::banner	3
 addons/dot_physics/runtime/dot_physics_query.gd::long_block	5
 addons/dot_physics/runtime/dot_physics_world.gd::long_block	5
-examples/physics_selftest.gd::banner	7
 examples/physics_selftest.gd::long_block	1
