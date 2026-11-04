@@ -12,8 +12,8 @@ extends Node
 ## godot --headless --path . res://examples/physics_selftest.tscn
 ## [/codeblock]
 
-const SECTIONS := 9
-const CHECKS := 148
+const SECTIONS := 10
+const CHECKS := 152
 
 var _passed := 0
 var _failed := 0
@@ -40,6 +40,7 @@ func _run() -> void:
 	# Awaited: this section needs physics frames to pass before a cast can hit
 	# anything, and an un-awaited coroutine would let the tally below print first.
 	await _test_queries()
+	_test_space_query_audit()
 
 	_line("")
 	_line("%d sections, %d passed, %d failed" % [_section_count, _passed, _failed])
@@ -660,3 +661,57 @@ func _check(condition: bool, what: String) -> void:
 
 func _line(text: String) -> void:
 	print(text)
+
+
+# --- Space-query audit -----------------------------------------------------
+
+## Every file under the addon that asks the physics space a question, found by grep. A new
+## one fails here until it is added to [constant QUERY_FILES] and to docs/threading.md, so the
+## list of callers that must run inside a physics step cannot go stale.
+const QUERY_FILES: Array[String] = ["runtime/dot_physics_query.gd"]
+const QUERY_NEEDLES: Array[String] = ["direct_space_state", "space.intersect_", "space.cast_motion(", "space.get_rest_info("]
+const TICK_ENTRY_NEEDLES: Array[String] = ["func _process(", "func _input(", "func _unhandled_input(", "call_deferred(", "await "]
+
+
+func _audit_scripts(dir: String, out: Array[String]) -> void:
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(".gd"):
+			out.append(dir.path_join(f))
+	for d in DirAccess.get_directories_at(dir):
+		_audit_scripts(dir.path_join(d), out)
+
+
+func _test_space_query_audit() -> void:
+	_section("space-query audit")
+	var scripts: Array[String] = []
+	_audit_scripts("res://addons/dot_physics", scripts)
+	var found: Array[String] = []
+	var in_tick_entry: Array[String] = []
+
+	for path in scripts:
+		var text := FileAccess.get_file_as_string(path)
+		var queries := false
+		for n in QUERY_NEEDLES:
+			if text.contains(n):
+				queries = true
+		if not queries:
+			continue
+		var rel := path.trim_prefix("res://addons/dot_physics/")
+		found.append(rel)
+		for n in TICK_ENTRY_NEEDLES:
+			if text.contains(n):
+				in_tick_entry.append("%s: %s" % [rel, n])
+
+	found.sort()
+	var expected := QUERY_FILES.duplicate()
+	expected.sort()
+	_check(scripts.size() > 5, "the audit found the addon's scripts")
+	_check(found == expected, "the files that query the space are exactly the documented ones" + " (found %s)" % [found])
+	_check(in_tick_entry.is_empty(), "no querying file has a frame, input, deferred or awaited entry point" + " " + str(in_tick_entry))
+
+	var doc := FileAccess.get_file_as_string("res://docs/threading.md")
+	var missing: Array[String] = []
+	for f in QUERY_FILES:
+		if not doc.contains(f.get_file()):
+			missing.append(f)
+	_check(missing.is_empty(), "docs/threading.md names every one" + " " + str(missing))

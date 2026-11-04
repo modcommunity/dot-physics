@@ -11,6 +11,7 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first.
 | Read | Before |
 | --- | --- |
 | [docs/design.md](docs/design.md) | changing anything: named layers, putting settings back, the presets, the closed collision relation, `classify`, surfaces as numbers, what this does not do |
+| [docs/threading.md](docs/threading.md) | adding a caller that casts: every space query must run inside the physics step; the audited list |
 | [docs/history.md](docs/history.md) | the layout every game named and no body followed |
 
 ## Layout
