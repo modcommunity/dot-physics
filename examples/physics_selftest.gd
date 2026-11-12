@@ -12,8 +12,8 @@ extends Node
 ## godot --headless --path . res://examples/physics_selftest.tscn
 ## [/codeblock]
 
-const SECTIONS := 10
-const CHECKS := 152
+const SECTIONS := 11
+const CHECKS := 164
 
 var _passed := 0
 var _failed := 0
@@ -41,6 +41,7 @@ func _run() -> void:
 	# anything, and an un-awaited coroutine would let the tally below print first.
 	await _test_queries()
 	_test_space_query_audit()
+	await _test_tick_gate()
 
 	_line("")
 	_line("%d sections, %d passed, %d failed" % [_section_count, _passed, _failed])
@@ -720,3 +721,56 @@ func _test_space_query_audit() -> void:
 		if not doc.contains(f.get_file()):
 			missing.append(f)
 	_check(missing.is_empty(), "docs/threading.md names every one" + " " + str(missing))
+
+
+func _test_tick_gate() -> void:
+	_section("tick gate")
+	var gate := DotTickGate.new()
+	# Lambdas capture by value, so the record and the fake step flag live in arrays.
+	var seen: Array[String] = []
+	var step: Array[bool] = [false]
+	gate.in_step = func() -> bool: return step[0]
+
+	gate.run(func() -> void: seen.append("a"))
+	_check(seen == ["a"], "unarmed, run() calls at once")
+	await gate.reached()
+	_check(true, "unarmed, reached() returns at once")
+
+	gate.armed = true
+	gate.run(func() -> void: seen.append("b"))
+	gate.run(func() -> void: seen.append("c"))
+	_check(seen == ["a"] and gate.pending() == 2, "armed between ticks, run() queues")
+	_check(gate.describe() == {"armed": true, "pending": 2}, "describe() reports armed and the queue")
+
+	step[0] = true
+	gate.run(func() -> void: seen.append("d"))
+	_check(seen == ["a", "d"], "armed inside the step, run() calls at once")
+	step[0] = false
+
+	gate.run(func() -> void: gate.run(func() -> void: seen.append("f")))
+	gate.open()
+	_check(seen == ["a", "d", "b", "c"], "open() runs the queue in arrival order")
+	_check(gate.pending() == 1, "a call queued during open() waits for the next tick")
+	gate.open()
+	_check(seen == ["a", "d", "b", "c", "f"] and gate.pending() == 0, "the next open() runs it")
+
+	var resumed: Array[bool] = [false]
+	var waiter := func() -> void:
+		await gate.reached()
+		resumed[0] = true
+	waiter.call()
+	_check(not resumed[0], "armed between ticks, reached() waits")
+	gate.open()
+	_check(resumed[0], "open() resumes whoever awaits reached()")
+
+	var freed := RefCounted.new()
+	gate.run(freed.notify_property_list_changed)
+	freed = null
+	gate.open()
+	_check(gate.pending() == 0, "a call whose object is gone is skipped")
+
+	gate.run(func() -> void: seen.append("never"))
+	resumed[0] = false
+	waiter.call()
+	gate.disarm()
+	_check(not seen.has("never") and gate.pending() == 0 and resumed[0], "disarm() drops the queue and releases waiters")

@@ -25,6 +25,17 @@ Everything else in dot-combat (`DotHitbox`, `DotHitboxSet`, lag-compensation rew
 
 Both suites grep their own code for this (`vehicle_selftest` and `headless_config` section "space-query audit"). Both request-handler paths queue the request and run it in the next tick; the replies are the `refused` signals as before.
 
+## Handlers that arrive between ticks: DotTickGate
+
+Console and chat commands, admin tools, map votes and network requests run in the idle frame, not in the step. A game whose handler reaches a query (a map change that rebuilds nav and drops objects with rays, a spawn that snaps to the floor) routes it through one `DotTickGate` (`runtime/dot_tick_gate.gd`, no space access itself):
+
+- The server sets `armed = true` when it starts and calls `disarm()` when it stops; solo, clients and bare suites leave it unarmed and every call runs at once.
+- The server's tick calls `open()` first thing: queued calls run in arrival order, then coroutines waiting in `reached()` resume, still inside the step.
+- A handler wraps its work in `gate.run(fn)` (or `await gate.reached()` before it). Inside the step, or unarmed, it runs immediately, so the same code serves the tick and the console.
+- A call queued while `open()` runs waits for the next tick; a call whose object was freed is skipped; `disarm()` drops the queue and releases waiters.
+
+The selftest section "tick gate" covers this with a stand-in for `Engine.is_in_physics_frame()` (`in_step`).
+
 ## The check
 
 `examples/physics_selftest.tscn` section "space-query audit" and dot-combat's `combat_selftest` section of the same name grep their own addon for space-query calls and fail when the file set differs from the table above, when a querying file gains a frame, input, deferred or awaited entry point, or (here only) when this page stops naming a file. Add a caller: add it to `QUERY_FILES` and to this table.

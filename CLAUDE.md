@@ -25,6 +25,7 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first.
 | `core/dot_physics_surface_set.gd` | `DotPhysicsSurfaceSet`: the table, `standard()`, how a collider maps to an entry (`tag`) |
 | `runtime/dot_physics_world.gd` | `DotPhysicsWorld`: applies a profile and a layout, `classify`, puts settings back on exit |
 | `runtime/dot_physics_query.gd` | `DotPhysicsQuery`: casts written against layer names (`shot_3d`) |
+| `runtime/dot_tick_gate.gd` | `DotTickGate`: holds handlers heard between ticks until the server's next tick (docs/threading.md) |
 | `examples/physics_selftest.tscn` | the suite: no world, no bodies, no renderer for the `core/` half |
 
 Paths except `examples/` are in `addons/dot_physics/`.
