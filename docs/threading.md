@@ -40,6 +40,27 @@ The selftest section "tick gate" covers this with a stand-in for `Engine.is_in_p
 
 `examples/physics_selftest.tscn` section "space-query audit" and dot-combat's `combat_selftest` section of the same name grep their own addon for space-query calls and fail when the file set differs from the table above, when a querying file gains a frame, input, deferred or awaited entry point, or (here only) when this page stops naming a file. Add a caller: add it to `QUERY_FILES` and to this table.
 
-## Not covered here (held by other repos)
+## Other addons and the games (audit 2026-11-16)
 
-`DotTpsController._apply_intent` (`move_and_slide` from `_process`), `DotFpsController._apply_intent` callers and the mg-wipeout weapon chains stay open on `server-physics-thread-1`.
+Found by running every suite with the setting on and tracing each "Space state is inaccessible" back to its root caller. Server paths all query inside the tick; what remains off-step is client presentation or a test harness.
+
+| Where | Query | Runs |
+| --- | --- | --- |
+| dot-player-controller `DotFpsPhysicsBodyNative.bind` | `direct_space_state` | Off-step on a join. On a threaded server it leaves the space unbound and the first query in the step binds it through `revalidate` (`fps_controller_selftest` section "threaded bind"). |
+| dot-player-controller motor, hull, surf, ladders | rays and shape casts | `simulate_tick` from the game tick: in the step |
+| dot-player-controller `DotCameraBoom`, `DotCameraProbe`, `DotTpsController` camera | camera rays | Client only |
+| dot-npc senses, dot-bot nav (`_step_stitches`, `_buried`, `_clear_fall`, `_drop_landing`), dot-2d `body_physics`, dot-core `DotSpaceQuery` | rays and shapes | Caller-driven: from the game tick or bot think |
+| dot-npc-ai annotator, dot-npc-ai-director `_is_visible_to_any_player`, dot-weapon drops, dot-props `toy_box` | rays | Stepped from the game tick |
+| dot-props toy `_sleep_at_start` | ray | After `await physics_frame` |
+| dot-spectate `_killer_hidden` | ray | Server delivery, inside `DotNetManager._physics_process` |
+| dot-player-char ragdoll `crossing`, `_hold_walls` | rays | `_physics_process` |
+| dot-player-char `DotHumanoidLegs.floor_lift`, ragdolls `_covered`; dot-audio, dot-fx, dot-mobile, dot-voice | rays | Client only (`_process`) |
+| dot-map glass sight, use, world | rays | The caller passes the space |
+| dot-core `collision_sweep` | sweeps | Editor and tools |
+| dot-core `DotCameraFade`, Zombie Zone zee-weapons view (`ZeeWorldModel._probe_wall`) | rays and shapes | Client only (`_process`) |
+| Zombie Zone `ZzMap.clear_spot` (spawns, players placed at the start and on a join) | `intersect_shape` | The start and a join run off-step (module load, signon). There `clear_spot` returns the unchecked spot (`ZzMap.space_open()`), and `ZzGame.seat_on_start` re-clears the seat through the `DotTickGate` in the next step (`dedicated` section "a start point waits for the tick"). |
+| Fatal Contact server: `game.tick`, spawn scoring (`_can_see_site`), bot think, nav warm-up from `_keep_bots` | rays | In the step |
+| Fatal Contact map and mode changes (`ArenaMapSession.change_to_map` after a delivered pack mounts, `fc_mode`, restarts, admin respawns): `settle_spawns`, the spawn sight | shape and ray | Already wait on `game.tick_gate` (armed by `ArenaModule`), so they run first thing in the next tick |
+| Fatal Contact client: `arena_client._present_roof`, `arena_player._behind_world`, `arena_player_build._under_cursor`, fc-weapons view (`aw_view_model_wall`, `aw_wall_slam`, `aw_world_model._probe_wall`, `aw_shot_fx`) | rays | Client only (`_process`) |
+
+Suites that drive `game.tick` or `world.is_route_pending()` from `await process_frame` (Fatal Contact `headless_botthreads`, `bot_map_base`, `headless_arena16`, `headless_ride_pilot`, `headless_imported`, `headless_cp_orange`, `headless_net`'s stepped server, `headless_delivered`'s unarmed game, and the view suites) are off-step by construction. With the setting forced on they log the error and fail; that is the harness, not the server. The setting is a dedicated-server option (`sv_physics_thread` in dot-server-deploy, default 0, unchanged), and a client never sets it. Measured: the thread gives no gain on a headless server, so the default stays off.
