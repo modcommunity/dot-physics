@@ -24,7 +24,7 @@ extends DotConfig
 ## [b]The single most consequential number in this file.[/b] It sets the granularity of
 ## every collision test, so a fast projectile at 30 Hz passes through a wall that it
 ## catches at 128; and it is the rate a networked game's commands are counted in, so
-## changing it changes what a recorded run means. dot-net, dot-match and dot-timer all
+## changing it changes what a recorded run means. GameSpice Net, GameSpice Match and GameSpice Timer all
 ## count in ticks and all have to be told the same number — which is why this is one
 ## value in one place rather than three.
 @export_range(10, 1000, 1) var tick_rate: int = 60
@@ -42,7 +42,7 @@ extends DotConfig
 ##
 ## Godot's default is 9.8, which is correct and feels wrong: a player falling at true
 ## Earth gravity at a human scale reads as floating, and every shooter since the
-## mid-nineties has used roughly twice it. 20.0 is what dot-player-controller's own
+## mid-nineties has used roughly twice it. 20.0 is what GameSpice Player Controller's own
 ## tunables use, and the two agreeing matters — a controller simulating its own gravity
 ## against a world using a different one produces props and players that fall at
 ## visibly different rates.

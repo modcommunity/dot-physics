@@ -5,7 +5,7 @@ extends Resource
 ## What one material is like to collide with: friction, bounce, density, and what it
 ## sounds like.
 ##
-## [b]Distinct from dot-player-controller's [code]DotFpsSurface[/code], and the difference
+## [b]Distinct from GameSpice Player Controller's [code]DotFpsSurface[/code], and the difference
 ## is worth stating because the two will otherwise be merged by somebody tidying up.[/b]
 ## That one is a set of [i]multipliers on player movement[/i] — ice makes you accelerate
 ## worse. This one is what the [i]solver[/i] is told about a rigid body: how much it
@@ -20,7 +20,7 @@ extends Resource
 ##   a steel one the same size are not the same weight;
 ## - [member thickness] is for sheet materials — glass, a fence — which have a volume
 ##   the solver would otherwise take literally;
-## - [member impact_sound] and [member scrape_sound] are ids for dot-audio, kept here
+## - [member impact_sound] and [member scrape_sound] are ids for GameSpice Audio, kept here
 ##   because a table with the physics in one file and the sounds in another drifts.
 
 ## The name everything else refers to: [code]&"metal"[/code], [code]&"ice"[/code].
@@ -56,7 +56,7 @@ extends Resource
 ## Multiplier on a character's ground acceleration. 1.0 is normal ground.
 ##
 ## Here as well as in a controller's own surface table because a game that only uses
-## dot-physics still wants ice to be slippery, and a game that uses both should be
+## GameSpice Physics still wants ice to be slippery, and a game that uses both should be
 ## reading one number.
 @export_range(0.0, 4.0, 0.01) var move_scale: float = 1.0
 
@@ -95,16 +95,16 @@ extends Resource
 
 @export_group("Presentation")
 
-## dot-audio id played on impact. Empty for silence.
+## GameSpice Audio id played on impact. Empty for silence.
 @export var impact_sound: StringName = &""
 
-## dot-audio id played while sliding along it.
+## GameSpice Audio id played while sliding along it.
 @export var scrape_sound: StringName = &""
 
-## dot-audio id played by a footstep on it.
+## GameSpice Audio id played by a footstep on it.
 @export var footstep_sound: StringName = &""
 
-## dot-fx id for the puff a bullet makes.
+## GameSpice FX id for the puff a bullet makes.
 @export var impact_effect: StringName = &""
 
 
@@ -127,7 +127,7 @@ static func make(
 ##
 ## Built on demand rather than stored, because a [PhysicsMaterial] handed to two bodies
 ## is shared by them: editing it to tune one retunes the other, which is the same
-## resource-aliasing trap dot-user-avatar's tinting had to avoid.
+## resource-aliasing trap GameSpice User Avatar's tinting had to avoid.
 func to_physics_material() -> PhysicsMaterial:
 	var m := PhysicsMaterial.new()
 	m.friction = friction

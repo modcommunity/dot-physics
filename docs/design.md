@@ -1,4 +1,4 @@
-# dot-physics design
+# GameSpice Physics design
 
 Why the addon is shaped the way it is, and why the obvious alternative is wrong at each point. The rules are one line each in [CLAUDE.md](../CLAUDE.md).
 
@@ -54,6 +54,6 @@ The addon simulates none of it. A game decides what a liquid does to a body, wha
 
 ## What this does not do
 
-It does not simulate and it does not own bodies. It does not replace dot-player-controller's `DotFpsSurface`, which is a set of multipliers on player movement rather than a description of a rigid body: a game wants both, and they are read by different code at different times.
+It does not simulate and it does not own bodies. It does not replace GameSpice Player Controller's `DotFpsSurface`, which is a set of multipliers on player movement rather than a description of a rigid body: a game wants both, and they are read by different code at different times.
 
 It does not decide collision layers at runtime. `classify()` is a call a game makes; nothing here walks a scene tree looking for things to reclassify, because a system that silently changes what a body collides with is a system nobody can debug.

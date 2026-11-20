@@ -1,4 +1,4 @@
-# dot-physics history
+# GameSpice Physics history
 
 Kept because the bug could come back. The live rules are in [design.md](design.md).
 

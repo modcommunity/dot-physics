@@ -516,7 +516,7 @@ static func platformer_2d() -> DotPhysicsLayout:
 ##
 ## [b]Note what is missing:[/b] there is no separate debris layer, because in a top-down
 ## arena the thing that costs is the [i]count[/i] of mutually colliding bodies and the
-## answer is a spatial hash rather than a layer. See dot-2d.
+## answer is a spatial hash rather than a layer. See GameSpice 2D.
 static func top_down_2d() -> DotPhysicsLayout:
 	var layout := DotPhysicsLayout.new()
 	layout.id = &"top_down_2d"

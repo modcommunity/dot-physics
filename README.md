@@ -65,7 +65,7 @@ These numbers are the defaults of each profile, not limits. Every profile is a `
 
 `DotPhysicsSurfaceSet.standard()` has 11 materials with friction, restitution, density, sheet thickness, movement multipliers and sound/effect ids. `for_collider()` looks a surface up from node metadata, then groups, then the node name (a best guess, for mapper-built levels).
 
-This is not dot-player-controller's surface table. That one scales player movement; this one tells the solver about rigid bodies.
+This is not GameSpice Player Controller's surface table. That one scales player movement; this one tells the solver about rigid bodies.
 
 ## More
 

@@ -1,10 +1,10 @@
-# dot-physics
+# GameSpice Physics
 
 Physics as a choice a game makes, rather than as whatever the engine defaulted to: named collision layers in preset layouts, an engine profile that is applied and put back, and a table of surface materials. It does not simulate and it does not own bodies.
 
 Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
-**The distributable is `addons/dot_physics/`.** It requires [dot-core](../dot-core) and nothing else (`ln -s ../../dot-core/addons/dot_core addons/dot_core`, gitignored).
+**The distributable is `addons/dot_physics/`.** It requires [GameSpice Core](../dot-core) and nothing else (`ln -s ../../dot-core/addons/dot_core addons/dot_core`, gitignored).
 
 ## Read before
 
