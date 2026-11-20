@@ -1,3 +1,5 @@
+[![dot-physics - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/247-dot-physics)
+
 Named collision layers and named physics settings for Godot, so you stop writing `1 << 3 | 1 << 7` and stop hunting through `ProjectSettings` for solver numbers.
 
 - **Layouts** give each collision layer a name and declare who collides with whom once.
